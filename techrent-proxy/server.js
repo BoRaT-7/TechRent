@@ -1,31 +1,29 @@
-// server.js
+// server.js  (techrent-proxy)
 const express = require("express");
-const cors = require("cors");
 const fetch = (...args) =>
   import("node-fetch").then(({ default: fetch }) => fetch(...args));
 
 const app = express();
 
-// ✅ CORS Middleware
-app.use(
-  cors({
-    origin: ["http://localhost:5178", "http://localhost:5179"], // আপনার frontend ports
-    methods: ["GET", "POST", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-    credentials: true, // যদি cookie/token ব্যবহৃত হয়
-  })
-);
+// ✅ Custom CORS middleware — এখানে কোনো app.options নেই
+app.use((req, res, next) => {
+  res.header("Access-Control-Allow-Origin", "http://localhost:5173");
+  res.header(
+    "Access-Control-Allow-Headers",
+    "Origin, X-Requested-With, Content-Type, Accept, Authorization"
+  );
+  res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+  if (req.method === "OPTIONS") {
+    return res.sendStatus(204); // Preflight OK
+  }
+  next();
+});
 
-// ✅ Express JSON parser
 app.use(express.json());
 
-// ✅ OPTIONS preflight handler
-app.options("/*", cors());
-
-// ✅ Login proxy route
-app.post("/api/admin/login", cors(), async (req, res) => {
+// ✅ Proxy login route
+app.post("/api/admin/login", async (req, res) => {
   try {
-    // Backend API call
     const backendRes = await fetch(
       "http://209.97.161.90:6002/api/v1/public/admin/login",
       {
@@ -35,27 +33,20 @@ app.post("/api/admin/login", cors(), async (req, res) => {
       }
     );
 
-    const data = await backendRes.json();
+    const text = await backendRes.text();
 
-    // Response same as backend
-    res.status(backendRes.status).json(data);
+    try {
+      const json = JSON.parse(text);
+      res.status(backendRes.status).json(json);
+    } catch {
+      res.status(backendRes.status).send(text);
+    }
   } catch (err) {
-    console.error("Proxy error:", err.message);
-    res.status(500).json({
-      message: "Proxy error",
-      error: err.message,
-    });
+    res.status(500).json({ message: "Proxy error", error: err.message });
   }
 });
 
-// ✅ Logout route (optional, just clear server-side if needed)
-app.post("/api/admin/logout", cors(), (req, res) => {
-  // কোনো server-side token না থাকলে শুধু response দিন
-  res.status(200).json({ message: "Logged out" });
-});
-
-// ✅ Start server
 const PORT = 5001;
 app.listen(PORT, () => {
-  console.log(`✅ Proxy server running on http://localhost:${PORT}`);
+  console.log("Proxy server running on http://localhost:" + PORT);
 });

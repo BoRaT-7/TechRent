@@ -12,8 +12,10 @@ function App() {
     <BrowserRouter>
       <AuthProvider>
         <Routes>
+          {/* Public route */}
           <Route path="/login" element={<Login />} />
 
+          {/* Protected route */}
           <Route
             path="/"
             element={

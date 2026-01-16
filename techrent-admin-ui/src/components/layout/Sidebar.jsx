@@ -1,15 +1,27 @@
 // src/components/Sidebar.jsx
 import React from "react";
-import { motion } from "framer-motion"; // ✅ Import motion
+import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 import { sidebarItems } from "../../config/sidebarItems";
+import { useAuth } from "../../context/AuthContext";
 
 function Sidebar({ sidebarOpen, setSidebarOpen }) {
+  const { logout } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout(); // token clear
+    navigate("/login", { replace: true }); // login পেজে পাঠাবে
+  };
+
   return (
     <>
       {/* Overlay for mobile */}
       <div
         className={`inset-0 bg-black/50 z-30 lg:hidden transition-opacity ${
-          sidebarOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+          sidebarOpen
+            ? "opacity-100 pointer-events-auto"
+            : "opacity-0 pointer-events-none"
         }`}
         onClick={() => setSidebarOpen(false)}
       />
@@ -22,7 +34,6 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
       >
         {/* Logo */}
         <div className="flex items-center gap-3 px-6 mb-8">
-          {/* Animated Logo Text */}
           <motion.span
             className="text-2xl font-semibold tracking-wide"
             initial={{ x: -20, opacity: 0 }}
@@ -36,7 +47,7 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
         {/* Menu Items - scrollable */}
         <nav className="flex-1 px-4 space-y-2 overflow-y-auto">
           {sidebarItems.map((item, idx) => {
-            const isActive = idx === 0; // First item active by default
+            const isActive = idx === 0;
             return (
               <button
                 key={item.key}
@@ -52,6 +63,16 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
             );
           })}
         </nav>
+
+        {/* Logout button */}
+        <div className="px-4 mt-4 mb-2">
+          <button
+            onClick={handleLogout}
+            className="w-full flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium rounded-lg bg-red-500 hover:bg-red-600 text-white"
+          >
+            Logout
+          </button>
+        </div>
       </aside>
 
       {/* Mobile toggle button */}

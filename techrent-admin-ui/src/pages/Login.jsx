@@ -1,64 +1,87 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+// src/pages/Login.jsx
+import { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
 const Login = () => {
   const navigate = useNavigate();
-  const { login, loading } = useAuth();
+  const location = useLocation();
+  const { login, loading, error, isAuthenticated } = useAuth();
 
-  const [form, setForm] = useState({
-    mobileNo: "01988841891",
-    password: "01988841891",
-  });
+  // ❌ default value remove
+  const [mobileNo, setMobileNo] = useState("");
+  const [password, setPassword] = useState("");
 
-  const [error, setError] = useState("");
+  // already logged in হলে redirect
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate("/", { replace: true });
+    }
+  }, [isAuthenticated, navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError("");
-
-    try {
-      await login(form);
-      navigate("/", { replace: true }); // ✅ Dashboard
-    } catch (err) {
-      setError(err.message);
+    const success = await login({ mobileNo, password });
+    if (success) {
+      const from = location.state?.from?.pathname || "/";
+      navigate(from, { replace: true });
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-100">
+    <div className="min-h-screen flex items-center justify-center bg-gray-100">
       <form
         onSubmit={handleSubmit}
-        className="bg-white p-8 rounded shadow w-96 space-y-4"
+        className="w-full max-w-md bg-white rounded-xl shadow-lg p-8"
       >
-        <h2 className="text-xl font-semibold text-center">Admin Login</h2>
+        <h2 className="text-2xl font-bold text-center mb-6 text-gray-800">
+          Admin Login
+        </h2>
 
-        {error && <p className="text-red-500 text-sm">{error}</p>}
+        {/* Mobile Number */}
+        <div className="mb-4">
+          <label className="block text-sm font-medium text-gray-600 mb-1">
+            Mobile Number
+          </label>
+          <input
+            type="text"
+            placeholder="01XXXXXXXXX"
+            value={mobileNo}
+            onChange={(e) => setMobileNo(e.target.value)}
+            className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            autoComplete="username"
+            required
+          />
+        </div>
 
-        <input
-          name="mobileNo"
-          value={form.mobileNo}
-          onChange={(e) =>
-            setForm({ ...form, mobileNo: e.target.value })
-          }
-          className="w-full border p-2 rounded"
-          placeholder="Mobile Number"
-        />
+        {/* Password */}
+        <div className="mb-4">
+          <label className="block text-sm font-medium text-gray-600 mb-1">
+            Password
+          </label>
+          <input
+            type="password"
+            placeholder="Enter your password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            autoComplete="current-password"
+            required
+          />
+        </div>
 
-        <input
-          type="password"
-          name="password"
-          value={form.password}
-          onChange={(e) =>
-            setForm({ ...form, password: e.target.value })
-          }
-          className="w-full border p-2 rounded"
-          placeholder="Password"
-        />
+        {/* Error Message */}
+        {error && (
+          <p className="text-red-500 text-sm mb-3 text-center">
+            {error}
+          </p>
+        )}
 
+        {/* Button */}
         <button
+          type="submit"
           disabled={loading}
-          className="w-full bg-blue-600 text-white py-2 rounded"
+          className="w-full bg-blue-600 hover:bg-blue-700 transition text-white font-semibold py-2 rounded-lg disabled:opacity-60"
         >
           {loading ? "Logging in..." : "Login"}
         </button>
