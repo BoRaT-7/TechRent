@@ -1,24 +1,27 @@
 // src/components/Sidebar.jsx
-import React from "react";
+import React, { useState } from "react";
 import { motion } from "framer-motion";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { sidebarItems } from "../../config/sidebarItems";
 import { useAuth } from "../../context/AuthContext";
 
 function Sidebar({ sidebarOpen, setSidebarOpen }) {
   const { logout } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const [openMenu, setOpenMenu] = useState(null);
 
+  // ❌ LOGOUT LOGIC NOT CHANGED
   const handleLogout = () => {
-    logout(); // token clear
-    navigate("/login", { replace: true }); // login পেজে পাঠাবে
+    logout();
+    navigate("/login", { replace: true });
   };
 
   return (
     <>
-      {/* Overlay for mobile */}
+      {/* Mobile Overlay */}
       <div
-        className={`inset-0 bg-black/50 z-30 lg:hidden transition-opacity ${
+        className={`fixed inset-0 bg-black/50 z-30 lg:hidden transition-opacity ${
           sidebarOpen
             ? "opacity-100 pointer-events-auto"
             : "opacity-0 pointer-events-none"
@@ -28,56 +31,99 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
 
       {/* Sidebar */}
       <aside
-        className={`fixed top-0 left-0 h-screen w-64 bg-gradient-to-b from-[#00A1FF] to-[#0F1F3D] text-white py-6 z-40 transform transition-transform lg:relative lg:translate-x-0 ${
+        className={`fixed top-0 left-0 h-screen w-64 bg-gradient-to-b from-[#00A1FF] to-[#0F1F3D] text-white z-40 transform transition-transform lg:relative lg:translate-x-0 ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         } flex flex-col`}
       >
         {/* Logo */}
-        <div className="flex items-center gap-3 px-6 mb-8">
+        <div className="px-6 py-6 text-2xl font-bold tracking-wide">
           <motion.span
-            className="text-2xl font-semibold tracking-wide"
-            initial={{ x: -20, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            transition={{ delay: 0.2, duration: 0.5 }}
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
           >
             TechRent
           </motion.span>
         </div>
 
-        {/* Menu Items - scrollable */}
-        <nav className="flex-1 px-4 space-y-2 overflow-y-auto">
-          {sidebarItems.map((item, idx) => {
-            const isActive = idx === 0;
+        {/* Menu */}
+        <nav className="flex-1 px-3 space-y-1 overflow-y-auto">
+          {sidebarItems.map((item) => {
+            const isActive = location.pathname === item.path;
+
+            // WITH SUB MENU
+            if (item.children) {
+              const isOpen = openMenu === item.key;
+
+              return (
+                <div key={item.key}>
+                  <button
+                    onClick={() =>
+                      setOpenMenu(isOpen ? null : item.key)
+                    }
+                    className="w-full flex items-center justify-between px-4 py-3 rounded-lg hover:bg-white/20"
+                  >
+                    <div className="flex items-center gap-3">
+                      <span>{item.icon}</span>
+                      <span className="text-sm font-medium">
+                        {item.label}
+                      </span>
+                    </div>
+                    <span>{isOpen ? "▲" : "▼"}</span>
+                  </button>
+
+                  {isOpen && (
+                    <div className="ml-10 mt-1 space-y-1">
+                      {item.children.map((child) => (
+                        <button
+                          key={child.key}
+                          onClick={() => navigate(child.path)}
+                          className={`block w-full text-left px-3 py-2 text-sm rounded-md ${
+                            location.pathname === child.path
+                              ? "bg-white text-[#0F1F3D]"
+                              : "hover:bg-white/20"
+                          }`}
+                        >
+                          {child.label}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            }
+
+            // NORMAL ITEM
             return (
               <button
                 key={item.key}
-                className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg transition-colors ${
+                onClick={() => navigate(item.path)}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition ${
                   isActive
                     ? "bg-white text-[#0F1F3D]"
-                    : "hover:bg-white/20 text-white/90"
+                    : "hover:bg-white/20"
                 }`}
               >
-                <span className="text-lg">{item.icon}</span>
+                <span>{item.icon}</span>
                 <span>{item.label}</span>
               </button>
             );
           })}
         </nav>
 
-        {/* Logout button */}
-        <div className="px-4 mt-4 mb-2">
+        {/* Logout */}
+        <div className="px-4 py-4">
           <button
             onClick={handleLogout}
-            className="w-full flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium rounded-lg bg-red-500 hover:bg-red-600 text-white"
+            className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-red-500 hover:bg-red-600 text-white font-medium"
           >
-            Logout
+            ⏻ Logout
           </button>
         </div>
       </aside>
 
-      {/* Mobile toggle button */}
+      {/* Mobile Toggle */}
       <button
-        className="fixed top-4 left-4 z-50 p-2 bg-white rounded-md shadow-lg lg:hidden"
+        className="fixed top-4 left-4 z-50 p-2 bg-white rounded-md shadow lg:hidden"
         onClick={() => setSidebarOpen(!sidebarOpen)}
       >
         {sidebarOpen ? "❌" : "☰"}

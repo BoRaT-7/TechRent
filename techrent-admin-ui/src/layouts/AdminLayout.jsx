@@ -1,9 +1,10 @@
 // src/layouts/AdminLayout.jsx
-import React, { useState } from "react";
+import { useState } from "react";
+import { Outlet } from "react-router-dom";
 import Header from "../components/layout/Header";
 import Sidebar from "../components/layout/Sidebar";
 
-function AdminLayout({ children }) {
+function AdminLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
@@ -11,14 +12,14 @@ function AdminLayout({ children }) {
       {/* Sidebar */}
       <Sidebar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
 
-      {/* Main content */}
+      {/* Main */}
       <div className="flex flex-1 flex-col overflow-hidden">
-        {/* Header always visible */}
+        {/* Header */}
         <Header setSidebarOpen={setSidebarOpen} />
 
-        {/* Scrollable page content */}
+        {/* Page Content */}
         <main className="flex-1 overflow-y-auto p-6">
-          {children}
+          <Outlet />
         </main>
       </div>
     </div>
