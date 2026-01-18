@@ -59,7 +59,11 @@ function RevenueLineChart() {
       </div>
 
       {/* Chart */}
-      <ResponsiveContainer width="100%" height="65%">
+      <ResponsiveContainer 
+      width="100%" 
+      height="100%"
+      minWidth = {0}
+      minHeight={200}>
         <LineChart
           data={data}
           margin={{ top: 10, right: 20, left: -15, bottom: 0 }}
